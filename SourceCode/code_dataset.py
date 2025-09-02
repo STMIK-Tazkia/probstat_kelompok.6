@@ -1,4 +1,4 @@
-```python
+
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -56,4 +56,4 @@ plt.figure(figsize=(8, 6))
 sns.heatmap(correlation, annot=True, cmap='coolwarm')
 plt.title("Korelasi Mental Health dengan CGPA")
 plt.show()
-```
+
