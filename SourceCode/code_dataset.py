@@ -4,7 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Membaca data dari file CSV
-df = pd.read_csv("mental_health_students.csv")
+df = pd.read_csv("Dataset.csv")
 
 # Tampilkan 5 data teratas
 print("Data awal:\n", df.head())
