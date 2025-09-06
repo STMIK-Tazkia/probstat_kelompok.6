@@ -7,6 +7,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LinearRegression, SGDClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_squared_error, accuracy_score, classification_report, confusion_matrix
+from sklearn.impute import SimpleImputer
 import numpy as np
 
 # ==============================================================================
@@ -43,9 +44,13 @@ for col in ['Gender', 'MaritalStatus', 'Depression', 'Anxiety', 'PanicAttack', '
         elif df[col].dtype == 'bool':
             df[col] = df[col].astype(int)
 
-# Menambahkan kolom CGPA_Numeric ke dataframe
+#Menambahkan kolom CGPA_Numeric ke dataframe
 if 'CGPA' in df.columns:
-    df['CGPA_Numeric'] = df['CGPA'].map(cgpa_map)
+    df['CGPA_Numeric'] = df['CGPA'].map(cgpa_map)     # Baris ini menerjemahkan IPK dari teks ke angka
+    # Mengisi nilai IPK yang kosong dengan nilai rata-rata dari semua IPK yang ada
+    df['CGPA_Numeric'].fillna(df['CGPA_Numeric'].mean(), inplace=True) 
+    # Baris ini tetap sama, untuk menghapus kolom yang tidak perlu
+    df.drop(columns=['CGPA_Grade'], inplace=True, errors='ignore')
 
 # Mendefinisikan fitur (X) dan target (y)
 # Fitur yang tidak relevan atau menyebabkan kebocoran data akan dibuang
@@ -54,17 +59,24 @@ X = df.drop(columns=features_to_drop, errors='ignore')
 y = df[TARGET]
 
 # Mengidentifikasi kolom kategorikal dan numerik untuk preprocessing
+X['StudyYear'] = X['StudyYear'].astype(str)
 categorical_features = ['Course', 'StudyYear']
 numerical_features = ['Age', 'CGPA_Numeric']
 
-# Membuat preprocessor untuk mentransformasi kolom
-# OneHotEncoder untuk data kategorikal, StandardScaler untuk data numerik
+# Membuat pipeline untuk fitur numerik yang menangani nilai kosong
+numeric_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='mean')), # Mengisi nilai kosong
+    ('scaler', StandardScaler())                  # Melakukan scaling
+])
+
+#Membuat preprocessor untuk mentransformasi kolom
 preprocessor = ColumnTransformer(
     transformers=[
-        ('num', StandardScaler(), numerical_features),
+        # Gunakan pipeline numerik yang baru
+        ('num', numeric_transformer, numerical_features), 
         ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
     ],
-    remainder='passthrough' # Biarkan kolom lain (spt Gender, MaritalStatus) apa adanya
+    remainder='passthrough' 
 )
 
 # Memisahkan data menjadi data latih dan data uji (80% latih, 20% uji)
